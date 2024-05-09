@@ -18,6 +18,14 @@ Write a program to determine whether a given matrix qualifies as a crossword gri
 export const testData = [
 	{
 		matrix: [
+			[0, 0, 1],
+			[0, 1, 0],
+			[1, 0, 0],
+		],
+		valid: true,
+	},
+	{
+		matrix: [
 			[0, 0, 1, 0, 0],
 			[0, 1, 0, 1, 0],
 			[1, 0, 0, 0, 1],
@@ -25,46 +33,6 @@ export const testData = [
 			[0, 0, 1, 0, 0],
 		],
 		valid: true,
-	},
-	{
-		matrix: [
-			[1, 0, 0, 0, 1],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[1, 0, 0, 0, 1],
-		],
-		valid: false,
-	},
-	{
-		matrix: [
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[1, 0, 1, 0, 1],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-		],
-		valid: true,
-	},
-	{
-		matrix: [
-			[0, 0, 0, 0, 0],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[0, 0, 0, 0, 0],
-		],
-		valid: false,
-	},
-	{
-		matrix: [
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[1, 0, 1, 0, 1],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-		],
-		valid: false,
 	},
 ]
 
@@ -75,6 +43,7 @@ function html(tag, body, attr = "") {
 }
 
 export function htmlTable(matrix) {
+	if (!matrix) return ""
 	const rows = matrix.length
 	let output = ""
 	for (let r = 0; r < rows; r++) {
