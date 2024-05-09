@@ -15,7 +15,15 @@ Write a program to determine whether a given matrix qualifies as a crossword gri
 
 */
 
-const testData = [
+export const testData = [
+	{
+		matrix: [
+			[0, 0, 1],
+			[0, 1, 0],
+			[1, 0, 0],
+		],
+		valid: true,
+	},
 	{
 		matrix: [
 			[0, 0, 1, 0, 0],
@@ -25,57 +33,17 @@ const testData = [
 			[0, 0, 1, 0, 0],
 		],
 		valid: true,
-	},
-	{
-		matrix: [
-			[1, 0, 0, 0, 1],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[1, 0, 0, 0, 1],
-		],
-		valid: false,
-	},
-	{
-		matrix: [
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[1, 0, 1, 0, 1],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-		],
-		valid: true,
-	},
-	{
-		matrix: [
-			[0, 0, 0, 0, 0],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[0, 0, 0, 0, 0],
-		],
-		valid: false,
-	},
-	{
-		matrix: [
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[1, 0, 1, 0, 1],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-		],
-		valid: false,
 	},
 ]
 
 const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 function html(tag, body, attr = "") {
-	//body = body.split().join("")
 	return "<" + tag + " " + attr + ">" + body + "</" + tag + ">"
 }
 
-function htmlTable(matrix) {
+export function htmlTable(matrix) {
+	if (!matrix) return ""
 	const rows = matrix.length
 	let output = ""
 	for (let r = 0; r < rows; r++) {
@@ -88,13 +56,9 @@ function htmlTable(matrix) {
 				output += html("td", alpha[i], 'class="white"')
 			}
 		}
-		output = html("tr", "" + output)
+		output = html("tr", output)
 	}
-	output = html("table", "" + output)
+	output = html("table", output)
 
 	return output
-}
-
-for (let i = 0; i < testData.length; i++) {
-	document.writeln(htmlTable(testData[i].matrix) + "<br/>")
 }
