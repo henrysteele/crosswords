@@ -53,7 +53,8 @@ export function htmlTable(matrix) {
 			if (matrix[r][c] == 1) {
 				output += html("td", "", 'class="black"')
 			} else {
-				output += html("td", alpha[i], 'class="white"')
+				// output += html("td", alpha[i], 'class="white"')
+				output += html("td", "", 'class="white"')
 			}
 		}
 		output = html("tr", output)

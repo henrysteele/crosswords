@@ -21,58 +21,83 @@ console.log({ is_spelled_correctly, array_of_suggestions, listOfWords, longWords
 
 
 // creates an empty NxN matrix
-function newMatrix (N) {
+function newMatrix (rows, cols = 0) {
+  if (!cols) cols = rows
   const m = []
-  for (let r = 0; r < N; r++) {
+  for (let r = 0; r < rows; r++) {
     m.push([])
-    for (let c = 0; c < N; c++) {
+    for (let c = 0; c < cols; c++) {
       m[r].push([])
     }
   }
   return m
 }
 
+
 // returns a new matrix that is the horizontal reflection of matrix
 function flipHorizontally (matrix) {
 
-  /*
-  Given [
-    [1,0,0],
-    [0,1,0],
-    [0,0,1],
-  ]
-
-  Return [
-    [0,0,1],
-    [0,1,0],
-    [1,0,0],
-  ]
-  */
-
   if (!matrix) return []
-  const N = matrix.length
-  const m = newMatrix(N)
+  const rows = matrix.length
+  const cols = matrix[0].length
+  const m = newMatrix(rows, cols)
 
-  for (let r = 0; r < N; r++) {
-    for (let c = 0; c < N; c++) {
-      m[r][c] = matrix[r][N - c - 1]
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      m[r][c] = matrix[r][cols - 1 - c]
     }
   }
   return m
 }
 
 function flipVertically (matrix) {
+  console.log({ flipVertically: matrix })
+  if (!matrix) return []
+  const rows = matrix.length
+  const cols = matrix[0].length
+  const m = newMatrix(rows, cols)
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      m[r][c] = matrix[rows - 1 - r][c]
+    }
+  }
+  return m
+}
+function addHorizontally (left, right) {
+  const m = []
+  for (let i = 0; i < left.length; i++) {
+    m.push([...left[i], ...right[i]])
+  }
+  return m
+}
+
+function addVertically (top, bottom) {
+  const m = []
+  let r;
+  for (r = 0; r < top.length; r++) {
+    m.push([...top[r]])
+  }
+  console.log({ addVertically1: m })
+  for (r = 0; r < bottom.length; r++) {
+    m.push([...bottom[r]])
+  }
+  console.log({ addVertically2: m })
+  return m
+}
+
+function deleteMiddle (matrix) {
+  //todo
   return matrix
 }
-function addHorizontally (left, right) { return left }
-function addVertically (top, bottom) { return right }
 
 function mirror (matrix) {
-  // let temp = addHorizontally(matrix, flipHorizontally(matrix))
-  // temp = addVertically(temp, flipVertically(temp))
-  // return temp
+  let temp = addHorizontally(matrix, flipHorizontally(matrix))
+  temp = addVertically(temp, flipVertically(temp))
+  return deleteMiddle(temp)
 
-  return flipHorizontally(matrix)
+
+  // return addHorizontally(matrix, flipHorizontally(matrix))
 }
 
 
