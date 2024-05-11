@@ -16,50 +16,50 @@ Write a program to determine whether a given matrix qualifies as a crossword gri
 */
 
 export const testData = [
-	{
-		matrix: [
-			[0, 0, 1],
-			[0, 1, 0],
-			[1, 0, 0],
-		],
-		valid: true,
-	},
-	{
-		matrix: [
-			[0, 0, 1, 0, 0],
-			[0, 1, 0, 1, 0],
-			[1, 0, 0, 0, 1],
-			[0, 1, 0, 1, 0],
-			[0, 0, 1, 0, 0],
-		],
-		valid: true,
-	},
+  {
+    matrix: [
+      [0, 0, 1],
+      [0, 1, 0],
+      [1, 0, 0],
+    ],
+    valid: true,
+  },
+  {
+    matrix: [
+      [0, 0, 0, 0, 0],
+      [0, 1, 0, 1, 0],
+      [0, 0, 0, 0, 0],
+      [0, 1, 0, 1, 0],
+      [0, 0, 0, 0, 0],
+    ],
+    valid: true,
+  },
 ]
 
 const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 function html(tag, body, attr = "") {
-	return "<" + tag + " " + attr + ">" + body + "</" + tag + ">"
+  return "<" + tag + " " + attr + ">" + body + "</" + tag + ">"
 }
 
 export function htmlTable(matrix) {
-	if (!matrix) return ""
-	const rows = matrix.length
-	let output = ""
-	for (let r = 0; r < rows; r++) {
-		const row = matrix[r]
-		for (let c = 0; c < row.length; c++) {
-			const i = Math.floor(Math.random() * alpha.length)
-			if (matrix[r][c] == 1) {
-				output += html("td", "", 'class="black"')
-			} else {
-				// output += html("td", alpha[i], 'class="white"')
-				output += html("td", "", 'class="white"')
-			}
-		}
-		output = html("tr", output)
-	}
-	output = html("table", output)
+  if (!matrix) return ""
+  const rows = matrix.length
+  let output = ""
+  for (let r = 0; r < rows; r++) {
+    const row = matrix[r]
+    for (let c = 0; c < row.length; c++) {
+      const i = Math.floor(Math.random() * alpha.length)
+      if (matrix[r][c] == 1) {
+        output += html("td", "", 'class="black"')
+      } else {
+        // output += html("td", alpha[i], 'class="white"')
+        output += html("td", "", 'class="white"')
+      }
+    }
+    output = html("tr", output)
+  }
+  output = html("table", output)
 
-	return output
+  return output
 }
