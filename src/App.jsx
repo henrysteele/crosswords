@@ -3,6 +3,7 @@ import './App.css'
 import { testData, htmlTable } from './script.js'
 import { onMount, createSignal } from 'solid-js'
 import Typo from "typo-js"
+import { findWords } from './helpers'
 
 
 var dictionary = new Typo("en_US", false, false, { dictionaryPath: "/node_modules/typo-js/dictionaries" })
@@ -18,7 +19,7 @@ for (let i = 10; i < 30; i++) {
 
 console.log({ is_spelled_correctly, array_of_suggestions, listOfWords, longWords })
 
-
+console.log({ find: findWords("a__l__") })
 
 // creates an empty NxN matrix
 function newMatrix (rows, cols = 0) {
@@ -87,20 +88,25 @@ function addVertically (top, bottom) {
 }
 
 function deleteMiddle (matrix) {
-  //todo
-  return matrix
+  let temp = matrix
+  const rows = temp.length
+
+  temp = temp.toSpliced(rows / 2, 1)
+
+  for (let row of temp) {
+    row.splice(row.length / 2, 1)
+  }
+
+  return temp
+
 }
 
 function mirror (matrix) {
   let temp = addHorizontally(matrix, flipHorizontally(matrix))
   temp = addVertically(temp, flipVertically(temp))
-  return deleteMiddle(temp)
-
-
-  // return addHorizontally(matrix, flipHorizontally(matrix))
+  temp = deleteMiddle(temp)
+  return temp
 }
-
-
 
 
 function App () {
@@ -119,7 +125,7 @@ function App () {
 
 
   testData.push({
-    matrix: mirror(testData[0].matrix)
+    matrix: mirror(testData[1].matrix)
   })
 
 
