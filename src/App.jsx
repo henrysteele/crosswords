@@ -1,25 +1,29 @@
-
-import './App.css'
-import { testData, htmlTable } from './script.js'
-import { onMount, createSignal } from 'solid-js'
+import "./App.css"
+import { testData, htmlTable } from "./script.js"
+import { onMount, createSignal } from "solid-js"
 import Typo from "typo-js"
 import { findWords } from './helpers'
 
+var dictionary = new Typo("en_US", false, false, {
+  dictionaryPath: "/node_modules/typo-js/dictionaries",
+})
+var is_spelled_correctly = dictionary.check("mispelled")
+var array_of_suggestions = dictionary.suggest("d-g", 20)
 
-var dictionary = new Typo("en_US", false, false, { dictionaryPath: "/node_modules/typo-js/dictionaries" })
-var is_spelled_correctly = dictionary.check("mispelled");
-var array_of_suggestions = dictionary.suggest("d-g", 20);
-
-const listOfWords = Object.keys(dictionary.dictionaryTable).filter(word => !word.includes("'"))
+const listOfWords = Object.keys(dictionary.dictionaryTable).filter(
+  (word) => !word.includes("'")
+)
 
 const longWords = {}
 for (let i = 10; i < 30; i++) {
-  longWords[i + " chars"] = listOfWords.filter(word => word.length == i)
+  longWords[i + " chars"] = listOfWords.filter((word) => word.length == i)
 }
+
 
 console.log({ is_spelled_correctly, array_of_suggestions, listOfWords, longWords })
 
 console.log({ find: findWords("a__l__") })
+
 
 // creates an empty NxN matrix
 function newMatrix (rows, cols = 0) {
@@ -34,10 +38,8 @@ function newMatrix (rows, cols = 0) {
   return m
 }
 
-
 // returns a new matrix that is the horizontal reflection of matrix
 function flipHorizontally (matrix) {
-
   if (!matrix) return []
   const rows = matrix.length
   const cols = matrix[0].length
@@ -75,7 +77,7 @@ function addHorizontally (left, right) {
 
 function addVertically (top, bottom) {
   const m = []
-  let r;
+  let r
   for (r = 0; r < top.length; r++) {
     m.push([...top[r]])
   }
@@ -88,29 +90,53 @@ function addVertically (top, bottom) {
 }
 
 function deleteMiddle (matrix) {
-  let temp = matrix
-  const rows = temp.length
-
-  temp = temp.toSpliced(rows / 2, 1)
-
-  for (let row of temp) {
-    row.splice(row.length / 2, 1)
+  const rows = matrix.length
+  matrix.splice(rows / 2, 1)
+  for (let row of matrix) {
+    const cols = row.length
+    row.splice(cols / 2, 1)
   }
+  return matrix
+}
+// 0001001000
 
-  return temp
-
+function goodMatrix (matrix) {
+  for (let r = 0; r <= matrix.length; r++) {
+    const row_2 = matrix[r - 2] || []
+    const row_1 = matrix[r - 1] || []
+    const row = matrix[r] || []
+    const row1 = matrix[r + 1] || []
+    const row2 = matrix[r + 2] || []
+    for (let c = 0; c < row.length; c++) {
+      if (row[c] == 1) continue
+      if (
+        !(
+          (row[c - 1] == 0 && row[c - 2] == 0) ||
+          (row[c + 1] == 0 && row[c + 2] == 0) ||
+          (row[c - 1] == 0 && row[c + 1] == 0) ||
+          (row_1[c] == 0 && row_2[c] == 0) ||
+          (row1[c] == 0 && row2[c] == 0) ||
+          (row_1[c] == 0 && row1[c] == 0)
+        )
+      )
+        return false
+    }
+  }
+  return true
 }
 
 function mirror (matrix) {
+  if (!matrix) return []
+
   let temp = addHorizontally(matrix, flipHorizontally(matrix))
   temp = addVertically(temp, flipVertically(temp))
   temp = deleteMiddle(temp)
+  console.log({ goodMatrix: goodMatrix(temp) })
+
   return temp
 }
 
-
 function App () {
-
   // const N = 30
   // const m = []
 
@@ -123,18 +149,15 @@ function App () {
   // }
   // testData.push({ matrix: m })
 
-
   testData.push({
-    matrix: mirror(testData[1].matrix)
+    matrix: mirror(testData[1].matrix),
   })
-
-
 
   return (
     <>
-      <For each={testData}>{
-        (item) => <div class="crossword" innerHTML={htmlTable(item.matrix)} />
-      }</For>
+      <For each={testData}>
+        {(item) => <div class="crossword" innerHTML={htmlTable(item.matrix)} />}
+      </For>
     </>
   )
 }
