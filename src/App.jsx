@@ -98,9 +98,36 @@ function deleteMiddle(matrix) {
   }
   return matrix
 }
-// 0001001000
 
-function goodMatrix(matrix) {
+function randomMatrix(N) {
+  const m = newMatrix(N)
+  for (let r = 0; r < m.length; r++) {
+    for (let c = 0; c < m[r].length; c++) {
+      let rand = Math.floor(Math.random() + 0.5)
+      m[r][c] = rand
+    }
+  }
+  return m
+}
+
+function hasquad(m) {
+  for (let r = 0; r < m.length - 1; r++) {
+    for (let c = 0; c < m[r].length - 1; c++) {
+      if (
+        m[r][c] == 0 &&
+        m[r + 1][c] == 0 &&
+        m[r][c + 1] == 0 &&
+        m[r + 1][c + 1] == 0
+      ) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+function isgoodMatrix(matrix) {
+  if (hasquad(matrix)) return false
   for (let r = 0; r <= matrix.length; r++) {
     const row_2 = matrix[r - 2] || []
     const row_1 = matrix[r - 1] || []
@@ -131,7 +158,7 @@ function mirror(matrix) {
   let temp = addHorizontally(matrix, flipHorizontally(matrix))
   temp = addVertically(temp, flipVertically(temp))
   temp = deleteMiddle(temp)
-  console.log({ goodMatrix: goodMatrix(temp) })
+  console.log({ isgoodMatrix: isgoodMatrix(temp) })
 
   return temp
 }
@@ -149,9 +176,18 @@ function App() {
   // }
   // testData.push({ matrix: m })
 
-  testData.push({
-    matrix: mirror(testData[1].matrix),
-  })
+  let matrix
+
+  for (let i = 10000; i != 0; i--) {
+    matrix = mirror(randomMatrix(5))
+    if (isgoodMatrix(matrix) == true) {
+      testData.push({
+        matrix: matrix,
+      })
+      console.log("This IS a good matrix!")
+      break
+    }
+  }
 
   return (
     <>
