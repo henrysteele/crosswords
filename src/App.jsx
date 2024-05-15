@@ -2,6 +2,7 @@ import "./App.css"
 import { testData, htmlTable } from "./script.js"
 import { onMount, createSignal } from "solid-js"
 import Typo from "typo-js"
+import { findWords } from "./helpers"
 
 var dictionary = new Typo("en_US", false, false, {
   dictionaryPath: "/node_modules/typo-js/dictionaries",
@@ -24,6 +25,8 @@ console.log({
   listOfWords,
   longWords,
 })
+
+console.log({ find: findWords("a__l__") })
 
 // creates an empty NxN matrix
 function newMatrix(rows, cols = 0) {
