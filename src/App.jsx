@@ -2,7 +2,8 @@ import "./App.css"
 import { testData, htmlTable } from "./script.js"
 import { onMount, createSignal } from "solid-js"
 import Typo from "typo-js"
-import { findWords } from "./helpers"
+import { findWords } from "./helpers.js"
+import { fillMatrix } from "./words.js"
 
 var dictionary = new Typo("en_US", false, false, {
   dictionaryPath: "/node_modules/typo-js/dictionaries",
@@ -185,9 +186,8 @@ function App() {
     matrix = mirror(randomMatrix(5))
     if (isgoodMatrix(matrix) == true) {
       testData.push({
-        matrix: matrix,
+        matrix: fillMatrix(matrix),
       })
-      console.log("This IS a good matrix!")
       break
     }
   }

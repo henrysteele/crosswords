@@ -54,7 +54,8 @@ export function htmlTable(matrix) {
         output += html("td", "", 'class="black"')
       } else {
         // output += html("td", alpha[i], 'class="white"')
-        output += html("td", "", 'class="white"')
+        const temp = matrix[r][c] ? matrix[r][c] : ""
+        output += html("td", temp, 'class="white"')
       }
     }
     output = html("tr", output)
