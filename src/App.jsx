@@ -2,7 +2,7 @@ import "./App.css"
 import { testData, htmlTable } from "./script.js"
 import { onMount, createSignal } from "solid-js"
 import Typo from "typo-js"
-import { findWords } from "./helpers.js"
+import { findWords, transpose } from "./helpers.js"
 import { fillMatrix } from "./words.js"
 
 var dictionary = new Typo("en_US", false, false, {
@@ -30,15 +30,17 @@ console.log({
 console.log({ find: findWords("a__l__") })
 
 // creates an empty NxN matrix
-function newMatrix(rows, cols = 0) {
+function newMatrix(rows = 4, cols = 0, value = 0) {
   if (!cols) cols = rows
   const m = []
+  console.log({ newMatrix: m, rows, cols, value })
   for (let r = 0; r < rows; r++) {
     m.push([])
     for (let c = 0; c < cols; c++) {
-      m[r].push([])
+      m[r].push(value)
     }
   }
+  console.log({ newMatrix: m })
   return m
 }
 
@@ -101,6 +103,27 @@ function deleteMiddle(matrix) {
     row.splice(cols / 2, 1)
   }
   return matrix
+}
+
+function fillRows(matrix) {
+  const N = matrix.length
+  for (let r = Math.round(Math.random()); r < N; r += 2) {
+    const width = 3 + Math.round(Math.random() * (N - 3))
+    const x = Math.round(Math.random() * (N - width))
+    console.log({ N, width, x })
+    for (let c = x; c < x + width; c++) {
+      matrix[r][c] = 0
+    }
+  }
+  return matrix
+}
+
+function createMatrix(N = 4) {
+  if (N < 4) N = 4
+  const matrix = newMatrix(N, N, 1)
+  console.log({ createMatrix: matrix })
+
+  return fillRows(transpose(fillRows(matrix)))
 }
 
 function randomMatrix(N) {
@@ -166,31 +189,23 @@ function mirror(matrix) {
 
   return temp
 }
-
-function App() {
-  // const N = 30
-  // const m = []
-
-  // for (let i = 0; i < N; i++) {
-  //   m.push([])
-  //   for (let j = 0; j < N; j++) {
-  //     m[i].push([])
-  //     m[i][j] = Math.round(Math.random())
-  //   }
-  // }
-  // testData.push({ matrix: m })
-
-  let matrix
-
-  for (let i = 10000; i != 0; i--) {
-    matrix = mirror(randomMatrix(5))
-    if (isgoodMatrix(matrix) == true) {
-      testData.push({
-        matrix: fillMatrix(matrix),
-      })
-      break
+function polishMatrix(m) {
+  for (let r = 0; r < m.length; r++) {
+    for (let c = 0; c < m[r].length; c++) {
+      if (m[r][c] == "_") {
+        m[r][c] = 1
+      }
     }
   }
+  return m
+}
+
+function App() {
+  let matrix
+
+  testData.push({
+    matrix: fillMatrix(mirror(createMatrix(7))),
+  })
 
   return (
     <>

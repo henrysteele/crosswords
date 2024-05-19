@@ -21,10 +21,9 @@ var dictionary = new Typo("en_US", false, false, {
 
 export const listOfWords = [
   ...new Set( // unique words
-    Object.keys(dictionary.dictionaryTable)
-      .filter((word) => !word.includes("'")) // no words
-      .filter((word) => !word.match(/[\d]/gi)) // no numbers
-      .map((word) => word.toUpperCase()) // uppercase
+    Object.keys(dictionary.dictionaryTable).filter((word) =>
+      word.match(/^[a-z]{3,}$/)
+    ) // only lowercase letters
   ),
 ]
 
