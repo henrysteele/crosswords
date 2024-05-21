@@ -15,26 +15,7 @@ Write a program to determine whether a given matrix qualifies as a crossword gri
 
 */
 
-export const testData = [
-  {
-    matrix: [
-      [0, 0, 1],
-      [0, 1, 0],
-      [1, 0, 0],
-    ],
-    valid: true,
-  },
-  {
-    matrix: [
-      [0, 0, 0, 0, 0],
-      [0, 1, 0, 1, 0],
-      [0, 0, 0, 0, 0],
-      [0, 1, 0, 1, 0],
-      [0, 0, 0, 0, 0],
-    ],
-    valid: true,
-  },
-]
+export const testData = []
 
 const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 

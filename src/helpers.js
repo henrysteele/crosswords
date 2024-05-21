@@ -38,6 +38,26 @@ export function excludeWords(list, excludes) {
   return list.filter((word) => !excludes.includes(word))
 }
 
+export function count(word, ch) {
+  let total = 0
+  for (let c of word) {
+    if (c == ch) {
+      total++
+    }
+  }
+  return total
+}
+
+export function shuffle(list) {
+  const newList = []
+  while (list.length) {
+    const j = Math.floor(Math.random() * list.length)
+    const temp = list.splice(j, 1)[0]
+    newList.push(temp)
+  }
+  return newList
+}
+
 // var is_spelled_correctly = dictionary.check("mispelled")
 // var array_of_suggestions = dictionary.suggest("dgg", 20)
 // const longWords = {}

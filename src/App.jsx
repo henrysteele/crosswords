@@ -4,31 +4,15 @@ import { onMount, createSignal } from "solid-js"
 import Typo from "typo-js"
 import { findWords, transpose } from "./helpers.js"
 import { fillMatrix } from "./words.js"
-
-var dictionary = new Typo("en_US", false, false, {
-  dictionaryPath: "/node_modules/typo-js/dictionaries",
-})
-var is_spelled_correctly = dictionary.check("mispelled")
-var array_of_suggestions = dictionary.suggest("d-g", 20)
-
-const listOfWords = Object.keys(dictionary.dictionaryTable).filter(
-  (word) => !word.includes("'")
-)
-
-const longWords = {}
-for (let i = 10; i < 30; i++) {
-  longWords[i + " chars"] = listOfWords.filter((word) => word.length == i)
+function deleteMiddle(matrix) {
+  const rows = matrix.length
+  matrix.splice(rows / 2, 1)
+  for (let row of matrix) {
+    const cols = row.length
+    row.splice(cols / 2, 1)
+  }
+  return matrix
 }
-
-console.log({
-  is_spelled_correctly,
-  array_of_suggestions,
-  listOfWords,
-  longWords,
-})
-
-console.log({ find: findWords("a__l__") })
-
 // creates an empty NxN matrix
 function newMatrix(rows = 4, cols = 0, value = 0) {
   if (!cols) cols = rows
@@ -95,20 +79,11 @@ function addVertically(top, bottom) {
   return m
 }
 
-function deleteMiddle(matrix) {
-  const rows = matrix.length
-  matrix.splice(rows / 2, 1)
-  for (let row of matrix) {
-    const cols = row.length
-    row.splice(cols / 2, 1)
-  }
-  return matrix
-}
-
 function fillRows(matrix) {
   const N = matrix.length
+  const maxWidth = 10
   for (let r = Math.round(Math.random()); r < N; r += 2) {
-    const width = 3 + Math.round(Math.random() * (N - 3))
+    const width = Math.min(maxWidth, 3 + Math.round(Math.random() * (N - 3)))
     const x = Math.round(Math.random() * (N - width))
     console.log({ N, width, x })
     for (let c = x; c < x + width; c++) {
@@ -137,74 +112,21 @@ function randomMatrix(N) {
   return m
 }
 
-function hasquad(m) {
-  for (let r = 0; r < m.length - 1; r++) {
-    for (let c = 0; c < m[r].length - 1; c++) {
-      if (
-        m[r][c] == 0 &&
-        m[r + 1][c] == 0 &&
-        m[r][c + 1] == 0 &&
-        m[r + 1][c + 1] == 0
-      ) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-function isgoodMatrix(matrix) {
-  if (hasquad(matrix)) return false
-  for (let r = 0; r <= matrix.length; r++) {
-    const row_2 = matrix[r - 2] || []
-    const row_1 = matrix[r - 1] || []
-    const row = matrix[r] || []
-    const row1 = matrix[r + 1] || []
-    const row2 = matrix[r + 2] || []
-    for (let c = 0; c < row.length; c++) {
-      if (row[c] == 1) continue
-      if (
-        !(
-          (row[c - 1] == 0 && row[c - 2] == 0) ||
-          (row[c + 1] == 0 && row[c + 2] == 0) ||
-          (row[c - 1] == 0 && row[c + 1] == 0) ||
-          (row_1[c] == 0 && row_2[c] == 0) ||
-          (row1[c] == 0 && row2[c] == 0) ||
-          (row_1[c] == 0 && row1[c] == 0)
-        )
-      )
-        return false
-    }
-  }
-  return true
-}
-
 function mirror(matrix) {
   if (!matrix) return []
 
   let temp = addHorizontally(matrix, flipHorizontally(matrix))
   temp = addVertically(temp, flipVertically(temp))
   temp = deleteMiddle(temp)
-  console.log({ isgoodMatrix: isgoodMatrix(temp) })
 
   return temp
-}
-function polishMatrix(m) {
-  for (let r = 0; r < m.length; r++) {
-    for (let c = 0; c < m[r].length; c++) {
-      if (m[r][c] == "_") {
-        m[r][c] = 1
-      }
-    }
-  }
-  return m
 }
 
 function App() {
   let matrix
 
   testData.push({
-    matrix: fillMatrix(mirror(createMatrix(7))),
+    matrix: fillMatrix(mirror(createMatrix(10))),
   })
 
   return (
