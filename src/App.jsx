@@ -1,10 +1,10 @@
 import "./App.css"
 import { testData, htmlTable } from "./script.js"
-import { onMount, createSignal } from "solid-js"
-import Typo from "typo-js"
-import { findWords, transpose } from "./helpers.js"
-import { fillMatrix } from "./words.js"
-function deleteMiddle(matrix) {
+
+import { transpose } from "./helpers.js"
+import { fillMatrix, usedWords, findWords } from "./words.js"
+
+function deleteMiddle (matrix) {
   const rows = matrix.length
   matrix.splice(rows / 2, 1)
   for (let row of matrix) {
@@ -14,7 +14,7 @@ function deleteMiddle(matrix) {
   return matrix
 }
 // creates an empty NxN matrix
-function newMatrix(rows = 4, cols = 0, value = 0) {
+function newMatrix (rows = 4, cols = 0, value = 0) {
   if (!cols) cols = rows
   const m = []
   console.log({ newMatrix: m, rows, cols, value })
@@ -29,7 +29,7 @@ function newMatrix(rows = 4, cols = 0, value = 0) {
 }
 
 // returns a new matrix that is the horizontal reflection of matrix
-function flipHorizontally(matrix) {
+function flipHorizontally (matrix) {
   if (!matrix) return []
   const rows = matrix.length
   const cols = matrix[0].length
@@ -43,7 +43,7 @@ function flipHorizontally(matrix) {
   return m
 }
 
-function flipVertically(matrix) {
+function flipVertically (matrix) {
   console.log({ flipVertically: matrix })
   if (!matrix) return []
   const rows = matrix.length
@@ -57,7 +57,7 @@ function flipVertically(matrix) {
   }
   return m
 }
-function addHorizontally(left, right) {
+function addHorizontally (left, right) {
   const m = []
   for (let i = 0; i < left.length; i++) {
     m.push([...left[i], ...right[i]])
@@ -65,7 +65,7 @@ function addHorizontally(left, right) {
   return m
 }
 
-function addVertically(top, bottom) {
+function addVertically (top, bottom) {
   const m = []
   let r
   for (r = 0; r < top.length; r++) {
@@ -79,10 +79,12 @@ function addVertically(top, bottom) {
   return m
 }
 
-function fillRows(matrix) {
+
+
+function fillRows (matrix) {
   const N = matrix.length
   const maxWidth = 10
-  for (let r = Math.round(Math.random()); r < N; r += 2) {
+  for (let r = 0; r < N; r += 2) {
     const width = Math.min(maxWidth, 3 + Math.round(Math.random() * (N - 3)))
     const x = Math.round(Math.random() * (N - width))
     console.log({ N, width, x })
@@ -93,7 +95,8 @@ function fillRows(matrix) {
   return matrix
 }
 
-function createMatrix(N = 4) {
+
+function createMatrix (N = 4) {
   if (N < 4) N = 4
   const matrix = newMatrix(N, N, 1)
   console.log({ createMatrix: matrix })
@@ -101,18 +104,8 @@ function createMatrix(N = 4) {
   return fillRows(transpose(fillRows(matrix)))
 }
 
-function randomMatrix(N) {
-  const m = newMatrix(N)
-  for (let r = 0; r < m.length; r++) {
-    for (let c = 0; c < m[r].length; c++) {
-      let rand = Math.floor(Math.random() + 0.5)
-      m[r][c] = rand
-    }
-  }
-  return m
-}
 
-function mirror(matrix) {
+function mirror (matrix) {
   if (!matrix) return []
 
   let temp = addHorizontally(matrix, flipHorizontally(matrix))
@@ -122,12 +115,14 @@ function mirror(matrix) {
   return temp
 }
 
-function App() {
+function App () {
   let matrix
 
   testData.push({
     matrix: fillMatrix(mirror(createMatrix(10))),
   })
+
+  console.log({ final: usedWords })
 
   return (
     <>
