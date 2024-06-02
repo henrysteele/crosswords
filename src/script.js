@@ -20,28 +20,26 @@ export const testData = []
 const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 function html(tag, body, attr = "") {
-  return "<" + tag + " " + attr + ">" + body + "</" + tag + ">"
+	return "<" + tag + " " + attr + ">" + body + "</" + tag + ">"
 }
 
 export function htmlTable(matrix) {
-  if (!matrix) return ""
-  const rows = matrix.length
-  let output = ""
-  for (let r = 0; r < rows; r++) {
-    const row = matrix[r]
-    for (let c = 0; c < row.length; c++) {
-      const i = Math.floor(Math.random() * alpha.length)
-      if (matrix[r][c] == 1) {
-        output += html("td", "", 'class="black"')
-      } else {
-        // output += html("td", alpha[i], 'class="white"')
-        const temp = matrix[r][c] ? matrix[r][c] : ""
-        output += html("td", temp, 'class="white"')
-      }
-    }
-    output = html("tr", output)
-  }
-  output = html("table", output)
+	if (!matrix) return ""
+	const rows = matrix.length
+	let output = ""
+	for (let r = 0; r < rows; r++) {
+		const row = matrix[r]
+		for (let c = 0; c < row.length; c++) {
+			const i = Math.floor(Math.random() * alpha.length)
+			const temp = /[a-z]/.test(matrix[r][c]) ? matrix[r][c] : ""
+			const style = ["1", "2", "3", 1, 2, 3].includes(matrix[r][c])
+				? 'class="black"'
+				: 'class="white"'
+			output += html("td", temp, style)
+		}
+		output = html("tr", output)
+	}
+	output = html("table", output)
 
-  return output
+	return output
 }

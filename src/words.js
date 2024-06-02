@@ -1,6 +1,8 @@
-import { cloneMatrix, transpose } from "./helpers"
+import { cloneMatrix, transpose } from "./matrix"
 import bigListOfWords from "./listofwords"
+import { crosswords, logger } from "./App"
 export const usedWords = []
+const maxWord = 3
 
 let listOfWords = bigListOfWords.filter(
 	// 3 or more letters and atleast one vowel
@@ -18,8 +20,21 @@ export function shuffle(list) {
 	return newList
 }
 
+// todo: convert listOfWords to a dictionary per word length, shuffled once - optimize
+
 export function findWords(w_rd, maxLength = w_rd.length) {
-	const regx = new RegExp(w_rd.replaceAll("_", "."), "gi")
+	let regx = w_rd.replaceAll("_", ".")
+	let dots = regx.replaceAll(/[^\\.]/g, "") // total dots only, e.g. replace ... with \w{3}
+	while (dots.length) {
+		if (dots.length > 1) {
+			regx = regx.replace(dots, "\\w{" + dots.length + "}")
+			dots = dots.slice(0, dots.length - 1)
+		} else {
+			regx = regx.replace(dots, "\\w")
+			break
+		}
+	}
+	regx = new RegExp(regx, "gi")
 	return listOfWords
 		.filter((word) => word.length == maxLength)
 		.filter((word) => word.match(regx))
@@ -39,61 +54,32 @@ function randomWord(w_rd, maxLength) {
 	return randomWords(w_rd, maxLength)[0] || ""
 }
 
-function fillWord(row, startIndex, colStart) {
-	if (row[startIndex] == 1) return startIndex //Not a blank
-	if (row[startIndex - 1] == 0) return startIndex //Not at beginning
-	if (row[startIndex + 1] == 1) return startIndex // Not a horizontal word
-	if (row[startIndex + 1] == undefined) return startIndex // Not a horizontal
-
-	let w_rd = ""
-
-	//intializes the w_rd given the zeros in matrix
-	for (let c = startIndex; c < row.length; c++) {
-		if (row[c] == 1) break
-		w_rd += row[c] || "_" //remember the nonzero value; replaces zeros with underscores
-	}
-	w_rd = randomWord(w_rd)
-
-	//Save used word once
-	if (!usedWords.includes(w_rd)) {
-		usedWords.push(w_rd)
-	}
-
-	//Adding word to row
-	for (let i = 0; i < w_rd.length; i++) {
-		row[startIndex + i] = w_rd[i]
-	}
-	console.log({ fillWord: w_rd, row: row, usedWords })
-	return startIndex + w_rd.length
-}
-
 function isAlpha(ch) {
 	return ch >= "a" && ch <= "z"
 }
 
 export function fillMatrix(m) {
-	// fill with random sized words
-	for (let i = 0; i < 2; i++) {
-		for (let row of m) {
-			for (let c = 0; c < row.length; c++) {
-				c = fillWord(row, c)
-			}
-			// for (let c = 1; c < row.length - 1; c++) {
-			// 	if (isAlpha(row[c])) {
-			// 		if (row[c - 1] == "1") row[c - 1] = "2"
-			// 		if (row[c + 1] == "1") row[c + 1] = "2"
-			// 	}
-			// }
-		}
-		transpose(m)
-	}
+	//crosswords.push(cloneMatrix(m))
 
-	// fill blanks, try 2 x the max number of words(4) per row  2/4 = 1/2
-	for (let i = 0; i < m.length; i++) {
+	// find words to fill gaps
+	for (let i = 0; i < m.length / maxWord + 1; i++) {
 		for (let r = 0; r < m.length; r += 2) {
+			// every other row, avoids parallel words
 			let row = m[r]
 			m[r] = fillBlanks(row.join("")).split("")
 		}
+		//crosswords.push(cloneMatrix(m))
+		transpose(m)
+	}
+
+	for (let i = 0; i < m.length / maxWord + 1; i++) {
+		for (let r = 0; r < m.length; r += 2) {
+			let row = m[r]
+			// every other row, avoids parallel words
+			let w_rd = row.join("").replace("1", ".")
+			m[r] = fillBlanks(w_rd, true).split("")
+		}
+		//crosswords.push(cloneMatrix(m))
 		transpose(m)
 	}
 
@@ -109,60 +95,63 @@ export function fillMatrix(m) {
 	return m
 }
 
-// given "...d.g..s...ac..."
-// return  [ ...d, ...d.g., ...d.g..s.., ...d.g..s...ac...,
-//        g..s.., g..s...ac...,
-//        .s..,.s...ac...,
-//        ..ac... ]
-// }
-function dotCombos(str) {
-	const parts = str.split(".") // Split into segments separated by .
-	const combinations = []
+function fillBlanks(w_rd, findSmallWords = false) {
+	w_rd = w_rd.replace(/[ _0]/g, ".")
+	if (!w_rd.includes(".")) return w_rd
+
+	const parts = w_rd.split(/[12]+/g)
+	for (let part of parts) {
+		if (!part.includes(".")) continue
+		const word = randomWord(part)
+		if (word) {
+			usedWords.push(word)
+			w_rd = w_rd.replace(part, word)
+			w_rd = w_rd.replace(new RegExp("1" + word), "2" + word)
+			w_rd = w_rd.replace(new RegExp(word + "1"), word + "2")
+			logger({ fillBlanks: w_rd, word, part })
+		}
+	}
+
+	if (findSmallWords) {
+		w_rd = fillSmallWords(w_rd.replaceAll("1", "."))
+	}
+
+	return w_rd
+}
+
+function fillSmallWords(w_rd, recurse = 0) {
+	w_rd = w_rd.replaceAll(/ _0/g, ".")
+	if (!w_rd.includes(".")) return w_rd
+	if (recurse > w_rd.length / maxWord) return w_rd
+
+	const parts = w_rd.split(".") // Split into segments separated by .
+	let combos = []
 
 	for (let i = 0; i < parts.length; i++) {
 		for (let j = i + 1; j <= parts.length; j++) {
 			const combo = parts.slice(i, j).join(".")
-			//if (combo.length > 2 && /[a-z]/i.test(combo)) {
-			if (combo.length > 2) {
-				combinations.push(combo)
+			if (
+				combo.length > 2 &&
+				combo.includes(".") &&
+				!/[\d]/.test(combo)
+			) {
+				combos.push(combo)
 			}
 		}
 	}
-	const dots = [...new Set(combinations)].sort((a, b) => b.length - a.length)
 
-	return dots.sort((a, b) => b.length - a.length) // longest first
-}
+	if (!combos.length) return w_rd
 
-function fillBlanks(w_rd) {
-	//if (!w_rd.includes("_")) return w_rd
+	combos = [...new Set(combos)].sort((a, b) => b.length - a.length) // longest first
 
-	// replace all _s and 1s with ., so we maximize the probability of filling the row
-	// this will compromise symmetry in favor of more words
-	const dots = w_rd.replaceAll(/[_1]/g, ".") // "...d.g..s...ac..."
-
-	// find all the possible words given the patterns in dots
-	let word = ""
-	let regx = ""
-	for (regx of dotCombos(dots)) {
-		word = randomWord(regx)
-		if (word.length) break
+	logger({ fillSmallWords: w_rd, combos })
+	for (let combo of combos) {
+		const word = randomWord(combo)
+		if (word) {
+			logger({ replace: w_rd, regx: combo, word })
+			w_rd = w_rd.replace(combo, word)
+			break
+		}
 	}
-
-	if (!word.length) return w_rd
-
-	// replace with the longest word we've found in dictionary
-	let result = dots
-		.replace(regx, word)
-		.replace(new RegExp(`\.${word}`), "2" + word)
-		.replace(new RegExp(`${word}\.`), word + "2")
-
-	if (!word.includes("_")) usedWords.push(word)
-
-	// replace remaining dots with _s
-	result = result.replaceAll(".", "1")
-
-	console.log({ fillBlanks: w_rd, dots, combo: regx, result })
-	return result
+	return fillSmallWords(w_rd, ++recurse)
 }
-
-fillBlanks("b_u_b_r_l_a_m_d_j_o")
