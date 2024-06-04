@@ -108,7 +108,7 @@ function fillBlanks(w_rd, findSmallWords = false) {
 			w_rd = w_rd.replace(part, word)
 			w_rd = w_rd.replace(new RegExp("1" + word), "2" + word)
 			w_rd = w_rd.replace(new RegExp(word + "1"), word + "2")
-			logger({ fillBlanks: w_rd, word, part })
+			//logger({ fillBlanks: w_rd, word, part })
 		}
 	}
 
@@ -144,11 +144,11 @@ function fillSmallWords(w_rd, recurse = 0) {
 
 	combos = [...new Set(combos)].sort((a, b) => b.length - a.length) // longest first
 
-	logger({ fillSmallWords: w_rd, combos })
+	//logger({ fillSmallWords: w_rd, combos })
 	for (let combo of combos) {
 		const word = randomWord(combo)
 		if (word) {
-			logger({ replace: w_rd, regx: combo, word })
+			//logger({ replace: w_rd, regx: combo, word })
 			w_rd = w_rd.replace(combo, word)
 			break
 		}

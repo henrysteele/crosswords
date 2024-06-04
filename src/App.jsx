@@ -1,9 +1,10 @@
 import "./App.css"
-import { testData, htmlTable } from "./script.js"
 
+import { For, createSignal } from "solid-js"
 import { makeCrossWord } from "./matrix.js"
 import { fillMatrix, usedWords } from "./words.js"
 import listofwords from "./listofwords"
+import CrosswordPuzzle from "./CrosswordPuzzle"
 
 export function logger (...args) {
   console.log(...args)
@@ -11,7 +12,7 @@ export function logger (...args) {
 
 export const crosswords = []
 
-function App () {
+export default function () {
 
   //for (let i = 5; i < 16; i += 5) {
   crosswords.push(fillMatrix(makeCrossWord(10)))
@@ -26,12 +27,10 @@ function App () {
 
   return (
     <>
-      <For each={crosswords}>
-        {(item) => <div class="crossword" innerHTML={htmlTable(item)} />}
-      </For>
+      <For each={crosswords}>{
+        (item) => <CrosswordPuzzle value={item} />
+      }</For>
     </>
   )
 }
-
-export default App
 

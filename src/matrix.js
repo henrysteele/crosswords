@@ -24,6 +24,17 @@ export function cloneMatrix(m) {
 	return JSON.parse(JSON.stringify(m))
 }
 
+export function sameMatrix(a, b) {
+	if (!a || !b) return false
+	if (a.length != b.length) return false
+	for (let r = 0; r < a.length; r++) {
+		for (let c = 0; c < a.length; c++) {
+			if (a[r][c] != b[r][c]) return false
+		}
+	}
+	return true
+}
+
 export function transpose(matrix) {
 	for (var i = 0; i < matrix.length; i++) {
 		for (var j = 0; j < i; j++) {
