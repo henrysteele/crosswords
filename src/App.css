@@ -5,25 +5,38 @@ body {
 }
 
 table {
+  width: fit-content;
   border: 3px solid black;
   border-spacing: 0;
+
+  background-image: url(https://images.unsplash.com/photo-1475372674317-8003c861cb6a);
+  /* (https://picsum.photos/500); */
+
+  background-size: cover;
+  background-color: black;
 }
 
 td {
-  height: 30px;
-  width: 30px;
+  height: 1rem;
+  width: 1rem;
   text-align: center;
-  border: 1px solid black;
   position: relative;
 }
 
+td.white {
+  color: white;
+
+}
+
 td input {
-  border: none;
   height: 30px;
   width: 30px;
   text-align: center;
   font-size: xx-large;
-  xcaret-color: transparent;
+  caret-color: transparent;
+  background-color: white;
+  color: black;
+  border: none;
 }
 
 .label {
@@ -31,14 +44,19 @@ td input {
   top: 1px;
   left: 1px;
   font-size: xx-small;
-  color: gray;
-}
-
-.black {
-  background: black;
-  color: white;
+  color: black;
 }
 
 .crossword {
   margin: 1em;
+}
+
+#hints a {
+  text-decoration: none;
+  color: inherit;
+}
+
+#hints a:hover {
+  text-decoration: underline;
+  color: blue;
 }
