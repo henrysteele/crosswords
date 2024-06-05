@@ -29,7 +29,7 @@ export default function () {
 
 
   return (
-    <>
+    <Container>
       <h1>Title</h1>
       <h2>description</h2>
 
@@ -39,7 +39,7 @@ export default function () {
       }</For>
 
 
-    </>
+    </Container>
   )
 }
 

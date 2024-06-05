@@ -1,8 +1,8 @@
 import { newMatrix, sameMatrix, transpose, cloneMatrix } from './matrix'
-import { For, createSignal, createEffect } from "solid-js"
+import { For, createSignal, createEffect, onMount } from "solid-js"
 import { logger } from './App'
 import prompt from "./ai"
-import { Button, Container, Stack, Popover, Card } from "@suid/material";
+import { Button, Container, Stack, Popper, Card } from "@suid/material";
 
 let matrix, usersMatrix, labelMatrix
 const words = { across: {}, down: {} }
@@ -75,10 +75,10 @@ export default function CrosswordPuzzle (props) {
 
 function Hints (props) {
 
-
     function onClick (n) {
-        debugger
         showTip(n)
+        const element = document.getElementById(n)
+        element?.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
     }
 
     return <>
@@ -89,7 +89,7 @@ function Hints (props) {
                     <h3>Across</h3>
                     <ol>
                         <For each={keys.across}>{
-                            (n) => <a href={'#' + n} onClick={() => { onClick('' + n) }}><li value={n}>{hints.across[n].hint}</li></a>
+                            (n) => <a onClick={() => { onClick(n) }}><li value={n}>{hints.across[n].hint}</li></a>
                         }</For>
                     </ol>
                 </div>
@@ -97,7 +97,7 @@ function Hints (props) {
                     <h3>Down</h3>
                     <ol>
                         <For each={keys.down}>{
-                            (n) => <a href={'#' + n} onClick={() => { onClick('' + n) }}><li value={n}>{hints.down[n].hint}</li></a>
+                            (n) => <a onClick={() => { onClick(n) }}><li value={n}>{hints.down[n].hint}</li></a>
                         }</For>
                     </ol>
                 </div>
@@ -119,9 +119,25 @@ function Cell (props) {
     const { pos } = props
     const blank = [1, 2, 3, "1", "2", "3"].includes(props.value)
     const [value, setValue] = createSignal(props.value)
+    const [label, setLabel] = createSignal()
+    const [hint, setHint] = createSignal()
 
-    const label = labelMatrix[pos.r][pos.c]
-    const hint = hints.across[label]?.hint || hints.down[label]?.hint || ""
+    onMount(() => {
+        setLabel(labelMatrix[pos.r][pos.c])
+        const across = hints.across[label()]?.hint
+        const down = hints.down[label()]?.hint
+
+        setHint(<>
+            <Show when={across}>
+                <h4 style={{ margin: 0 }}>{label()} across</h4>
+                {across}
+            </Show>
+            <Show when={down}>
+                <h4 style={{ margin: 0 }}>{label()} down</h4>
+                {down}
+            </Show>
+        </>)
+    })
 
     function onKeyDown (e) {
         if (e.key.length > 1) return
@@ -132,24 +148,22 @@ function Cell (props) {
         }
     }
 
-    return <td class={blank ? "black" : "white"}>
-        <Show when={!blank}>
-            <Popover
-                open={Boolean(label == tip())}
-                anchorEl={() => {
-                    return document.getElementById(label)
-                }}
-                anchorOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                }}
-            >
-                <Card>{hint}</Card>
-            </Popover>
+    return <>
 
-            <Show when={label}><div class="label">{label}</div></Show>
-            <input id={label || ""} minLength={1} maxLength={1} value={value()} onKeyDown={onKeyDown} />
+        <td class={blank ? "black" : "white"}>
+            <Show when={!blank}>
+                <Show when={label()}><div class="label">{label()}</div></Show>
+                <input id={label() || ""} minLength={1} maxLength={1} value={value()} onKeyDown={onKeyDown} />
+                <Popper
+                    open={label() == tip()}
+                    anchorEl={document.getElementById(label())}
+                    placement={"top-start"}
+                >
+                    <Card sx={{ padding: "0.5em", margin: "0.5em" }}>{hint()}</Card>
+                </Popper>
+            </Show>
+        </td>
 
-        </Show>
-    </td>
+
+    </>
 }
