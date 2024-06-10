@@ -13,16 +13,13 @@ console.log({ keys })
 
 const [done, setDone] = createSignal(false)
 const [tip, showTip] = createSignal()
+const [activePos, setActivePos] = createSignal()
 
 function getPeers (pos) {
-
-    pos = assessPos(pos)
+    if (!pos) return []
+    if (matrix[pos.r][pos.c] == 1) return []
 
     const peers = []
-
-    if (!pos) return peers
-    if (matrix[pos.r][pos.c] == 1) return peers
-
 
     if (pos.horizontalWord) {
         // peers to the left
@@ -79,6 +76,10 @@ function assessPos (pos) {
     p.startDown = p.oneAbove && !p.oneBelow  // is there a 1 above and not below
     p.startOfWord = p.startAcross || p.startDown
 
+    p.rc = `r${r}c${c}`
+    p.peers = getPeers(pos)
+    p.label = findLabel(pos)
+
     return p
 }
 
@@ -131,10 +132,17 @@ export default function CrosswordPuzzle (props) {
     </>
 }
 
+function findPos (n) {
+    const len = labelMatrix.length
+    for (let r = 0; r < len; r++)
+        for (let c = 0; c < len; c++)
+            if (labelMatrix[r][c] == n) return { r, c }
+}
 
 function Hints (props) {
 
     function onClick (n) {
+        setActivePos(assessPos(findPos(n)))
         showTip(n)
         const element = document.getElementById(n)
         element?.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
@@ -175,72 +183,69 @@ function Row (props) {
 }
 
 
+function findLabel (pos) {
+    if (!pos) return
+    if (!labelMatrix) return
+
+    let label = false
+    if (pos.horizontalWord) {
+        for (let c = pos.c; c >= 0; c--) {
+            if (matrix[pos.r][c] == 1) return label
+            const temp = labelMatrix[pos.r][c]
+            if (temp) label = temp
+        }
+    }
+    if (pos.verticalWord) {
+        for (let r = pos.r; r >= 0; r--) {
+            if (matrix[r][pos.c] == 1) return label
+            const temp = labelMatrix[r][pos.c]
+            if (temp) label = temp
+        }
+    }
+    return label
+}
+
 function Cell (props) {
-    let { pos } = props
+
     const blank = [1, 2, 3, "1", "2", "3"].includes(props.value)
     const [value, setValue] = createSignal(props.value)
     const [label, setLabel] = createSignal("")
     const [hint, setHint] = createSignal(<></>)
     const [style, setStyle] = createSignal({})
-    const [peers, setPeers] = createSignal([])
+    const [pos, setPos] = createSignal(props.pos)
 
     onMount(() => {
-        setLabel(labelMatrix[pos.r][pos.c])
-        const across = hints.across[label()]?.hint
-        const down = hints.down[label()]?.hint
+
+        setPos(assessPos(pos()))
+
+        let n = labelMatrix[pos().r][pos().c]
+        if (n) setLabel(n)
+        else n = findLabel(pos())
+
+        let across = hints.across[n]?.hint
+        let down = hints.down[n]?.hint
 
         setHint(<>
-            <Show when={across}>
-                <h4 style={{ margin: 0 }}>{label()} across</h4>
+            <Show when={across && pos().horizontalWord}>
+                <h4 style={{ margin: 0 }}>{n} across</h4>
                 {across}
             </Show>
-            <Show when={down}>
-                <h4 style={{ margin: 0 }}>{label()} down</h4>
+            <Show when={down && pos().verticalWord}>
+                <h4 style={{ margin: 0 }}>{n} down</h4>
                 {down}
             </Show>
         </>)
-        pos = assessPos(pos)
-        setPeers(getPeers(pos))
+
     })
 
-    function findPos (n) {
-        const len = labelMatrix.length
-        for (let r = 0; r < len; r++)
-            for (let c = 0; c < len; c++)
-                if (labelMatrix[r][c] == n) return { r, c }
-    }
-
-    function findLabel (pos) {
-        if (pos.startOfWord == undefined) pos = assessPos(pos)
-        const { r, c } = pos
-        const m = matrix
-
-        if (pos.horizontalWord) {
-            for (let c = pos.c; c >= 0; c--) {
-                if (matrix[r][c] == 1) break
-                const label = labelMatrix[r][c]
-                if (label) return label
-            }
-        }
-
-        if (pos.verticalWord) {
-            for (let r = pos.r; r >= 0; r--) {
-                if (matrix[r][c] == 1) break
-                const label = labelMatrix[r][c]
-                if (label) return label
-            }
-        }
-        return false
-    }
 
     createEffect(() => {
-        if (!peers().length) return
-        if (!tip()) return
-        const { r, c } = findPos(tip())
-        const rc = `r${r}c${c}`
-        const style = peers().includes(rc) ? { opacity: 1 } : { opacity: .5 }
+        if (!activePos() || !activePos().peers) return
+        if (!pos() || !pos().rc) return
+        const style = activePos().peers.includes(pos().rc) ? { opacity: 1 } : { opacity: .5 }
         setStyle(style)
     })
+
 
     function onKeyDown (e) {
         if (e.key.length > 1) return
@@ -252,10 +257,14 @@ function Cell (props) {
     }
 
     function onClick () {
-        pos = (assessPos(pos))
-        setPeers(getPeers(pos))
-        const n = findLabel(pos)
-        showTip(n)
+        setActivePos(pos())
+        showTip(findLabel(pos))
+    }
+
+    function isActive () {
+        if (!activePos()) return false
+        if (!pos()) return false
+        return activePos().r == pos().r && activePos().c == pos().c
     }
 
     return <>
@@ -269,8 +278,8 @@ function Cell (props) {
                     style={style()}
                 />
                 <Popper
-                    open={label() == tip()}
-                    anchorEl={document.getElementById(label())}
+                    open={isActive()}
+                    anchorEl={document.getElementById(findLabel(assessPos(pos())))}
                     placement={"top-start"}
                 >
                     <Card sx={{ padding: "0.5em", margin: "0.5em" }}>{hint()}</Card>
