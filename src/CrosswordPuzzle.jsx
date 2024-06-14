@@ -12,7 +12,6 @@ const keys = { across: Object.keys(hints.across), down: Object.keys(hints.down) 
 console.log({ keys })
 
 const [done, setDone] = createSignal(false)
-const [tip, showTip] = createSignal()
 const [activePos, setActivePos] = createSignal()
 
 function getPeers (pos) {
@@ -24,13 +23,13 @@ function getPeers (pos) {
     if (pos.horizontalWord) {
         // peers to the left
         let r = pos.r
-        for (let c = pos.c; c >= 0; c--) {
+        for (let c = pos.c - 1; c >= 0; c--) {
             if (matrix[r][c] == 1) break;
             peers.push({ r, c })
         }
 
         // peers to the right
-        for (let c = pos.c; c < matrix.length; c++) {
+        for (let c = pos.c + 1; c < matrix.length; c++) {
             if (matrix[r][c] == 1) break;
             peers.push({ r, c })
         }
@@ -39,13 +38,13 @@ function getPeers (pos) {
     if (pos.verticalWord) {
         // peers above
         let c = pos.c
-        for (let r = pos.r; r >= 0; r--) {
+        for (let r = pos.r - 1; r >= 0; r--) {
             if (matrix[r][c] == 1) break;
             peers.push({ r, c })
         }
 
         // peers below
-        for (let r = pos.r; r < matrix.length; r++) {
+        for (let r = pos.r + 1; r < matrix.length; r++) {
             if (matrix[r][c] == 1) break;
             peers.push({ r, c })
         }
@@ -60,6 +59,7 @@ function assessPos (pos) {
     const p = pos
     const len = matrix.length
     let { r, c } = pos
+    if (matrix[r][c] == 1) return pos
 
     // is there a 1 to the left or right?
     p.oneLeft = c ? matrix[r][c - 1] == 1 : true
@@ -132,6 +132,161 @@ export default function CrosswordPuzzle (props) {
     </>
 }
 
+
+
+function Row (props) {
+    return <>
+        <For each={props.value}>{
+            (item, col) => <Cell value={item} pos={{ r: props.row, c: col() }} />
+        }</For>
+    </>
+}
+
+
+function findLabel (pos) {
+    if (!pos) return
+    if (!labelMatrix) return
+
+    let label = false
+    if (pos.horizontalWord) {
+        for (let c = pos.c; c >= 0; c--) {
+            if (matrix[pos.r][c] == 1) return label
+            const temp = labelMatrix[pos.r][c]
+            if (temp) label = temp
+        }
+        return label
+    } else {
+        for (let r = pos.r; r >= 0; r--) {
+            if (matrix[r][pos.c] == 1) return label
+            const temp = labelMatrix[r][pos.c]
+            if (temp) label = temp
+        }
+    }
+    return label
+}
+
+function Cell (props) {
+
+    const blank = [1, 2, 3, "1", "2", "3"].includes(props.value)
+    const [value, setValue] = createSignal(props.value)
+    const [label, setLabel] = createSignal("")
+    const [hint, setHint] = createSignal(<></>)
+    const [style, setStyle] = createSignal({})
+    const [pos, setPos] = createSignal(props.pos)
+    let anchor
+
+    onMount(() => {
+
+        setPos(assessPos({ ...pos() })) // clone triggers a re-render of cell
+
+        let n = labelMatrix[pos().r][pos().c]
+        if (n) {
+            setLabel(n)
+            let across = hints.across[n]?.hint
+            let down = hints.down[n]?.hint
+
+            setHint(<>
+                <Show when={across && pos().horizontalWord}>
+                    <h4 style={{ margin: 0 }}>{n} across</h4>
+                    {across}
+                </Show>
+                <Show when={down && pos().verticalWord}>
+                    <h4 style={{ margin: 0 }}>{n} down</h4>
+                    {down}
+                </Show>
+            </>)
+        }
+    })
+
+
+    createEffect(() => {
+        if (!activePos() || !activePos().peers) return
+        if (!pos() || !pos().rc) return
+        if (isActive()) anchor?.focus()
+        const style = isActive() || activePos().peers.includes(pos().rc) ? { opacity: 1 } : { opacity: .5 }
+        setStyle(style)
+    })
+
+    function minmax (n, max = matrix.length - 1) {
+        return Math.max(0, Math.min(max, n))
+    }
+
+    function move (dir) {
+        if (!dir) return
+        let { r, c } = activePos()
+        const edges = [1, 2, 3, "1", "2", "3"]
+
+        if (dir == "right") {
+            if (!edges.includes(matrix[r][minmax(++c)])) setActivePos(assessPos({ r, c }))
+        }
+        else if (dir == "down") {
+            if (!edges.includes(matrix[minmax(++r)][c])) setActivePos(assessPos({ r, c }))
+        }
+        else if (dir == "left") {
+            if (!edges.includes(matrix[r][minmax(--c)])) setActivePos(assessPos({ r, c }))
+        }
+        else if (dir == "up") {
+            if (!edges.includes(matrix[minmax(--r)][c])) setActivePos(assessPos({ r, c }))
+        }
+
+        return activePos()
+    }
+
+    function onKeyDown (e) {
+
+        console.log({ key: e.key })
+        const char = e.key.toString().toLowerCase()
+        if (/^[ a-z]$/.test(char)) {
+            setValue(char)
+            usersMatrix[pos().r][pos().c] = char
+            setDone(sameMatrix(matrix, usersMatrix))
+            move(pos().horizontalWord ? "right" : "down")
+            return
+        } else {
+            // ArrowLeft, ArrowRight, ArrowDown, ArrowUp
+            move(e.key.toString().toLowerCase().replace("arrow", ""))
+            return
+        }
+    }
+
+    function onClick () {
+        setActivePos(pos())
+    }
+
+    function isActive () {
+        if (!activePos()) return false
+        if (!pos()) return false
+        return activePos().r == pos().r && activePos().c == pos().c
+    }
+
+
+    return <>
+
+        <td>
+            <Show when={!blank}>
+                <Show when={label()}><div class="label">{label()}</div></Show>
+                <input id={label() || ""} minLength={1} maxLength={1} value={value()}
+                    onKeyDown={onKeyDown}
+                    onClick={onClick}
+                    style={style()}
+                    ref={anchor}
+                />
+
+                <Popper
+                    open={isActive() && label()}
+                    anchorEl={anchor}
+                    placement={pos().verticalWord ? "top-start" : "bottom-start"}
+                >
+                    <Card sx={{ padding: "0.5em", margin: "0.5em" }}>{hint()}</Card>
+                </Popper>
+            </Show>
+
+        </td>
+
+
+    </>
+}
+
 function findPos (n) {
     const len = labelMatrix.length
     for (let r = 0; r < len; r++)
@@ -143,7 +298,7 @@ function Hints (props) {
 
     function onClick (n) {
         setActivePos(assessPos(findPos(n)))
-        showTip(n)
+
         const element = document.getElementById(n)
         element?.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
         element.focus()
@@ -171,122 +326,5 @@ function Hints (props) {
                 </div>
             </Stack>
         </div>
-    </>
-}
-
-function Row (props) {
-    return <>
-        <For each={props.value}>{
-            (item, col) => <Cell value={item} pos={{ r: props.row, c: col() }} />
-        }</For>
-    </>
-}
-
-
-function findLabel (pos) {
-    if (!pos) return
-    if (!labelMatrix) return
-
-    let label = false
-    if (pos.horizontalWord) {
-        for (let c = pos.c; c >= 0; c--) {
-            if (matrix[pos.r][c] == 1) return label
-            const temp = labelMatrix[pos.r][c]
-            if (temp) label = temp
-        }
-    }
-    if (pos.verticalWord) {
-        for (let r = pos.r; r >= 0; r--) {
-            if (matrix[r][pos.c] == 1) return label
-            const temp = labelMatrix[r][pos.c]
-            if (temp) label = temp
-        }
-    }
-    return label
-}
-
-function Cell (props) {
-
-    const blank = [1, 2, 3, "1", "2", "3"].includes(props.value)
-    const [value, setValue] = createSignal(props.value)
-    const [label, setLabel] = createSignal("")
-    const [hint, setHint] = createSignal(<></>)
-    const [style, setStyle] = createSignal({})
-    const [pos, setPos] = createSignal(props.pos)
-
-    onMount(() => {
-
-        setPos(assessPos(pos()))
-
-        let n = labelMatrix[pos().r][pos().c]
-        if (n) setLabel(n)
-        else n = findLabel(pos())
-
-        let across = hints.across[n]?.hint
-        let down = hints.down[n]?.hint
-
-        setHint(<>
-            <Show when={across && pos().horizontalWord}>
-                <h4 style={{ margin: 0 }}>{n} across</h4>
-                {across}
-            </Show>
-            <Show when={down && pos().verticalWord}>
-                <h4 style={{ margin: 0 }}>{n} down</h4>
-                {down}
-            </Show>
-        </>)
-
-    })
-
-
-    createEffect(() => {
-        if (!activePos() || !activePos().peers) return
-        if (!pos() || !pos().rc) return
-        const style = activePos().peers.includes(pos().rc) ? { opacity: 1 } : { opacity: .5 }
-        setStyle(style)
-    })
-
-
-    function onKeyDown (e) {
-        if (e.key.length > 1) return
-        if (/[ a-zA-Z]/.test(e.key)) {
-            setValue(e.key)
-            usersMatrix[pos.r][pos.c] = e.key
-            setDone(sameMatrix(matrix, usersMatrix))
-        }
-    }
-
-    function onClick () {
-        setActivePos(pos())
-        showTip(findLabel(pos))
-    }
-
-    function isActive () {
-        if (!activePos()) return false
-        if (!pos()) return false
-        return activePos().r == pos().r && activePos().c == pos().c
-    }
-
-    return <>
-
-        <td>
-            <Show when={!blank}>
-                <Show when={label()}><div class="label">{label()}</div></Show>
-                <input id={label() || ""} minLength={1} maxLength={1} value={value()}
-                    onKeyDown={onKeyDown}
-                    onClick={onClick}
-                    style={style()}
-                />
-                <Popper
-                    open={isActive()}
-                    anchorEl={document.getElementById(findLabel(assessPos(pos())))}
-                    placement={"top-start"}
-                >
-                    <Card sx={{ padding: "0.5em", margin: "0.5em" }}>{hint()}</Card>
-                </Popper>
-            </Show>
-        </td>
-
-
     </>
 }
